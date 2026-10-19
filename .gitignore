@@ -1,0 +1,17 @@
+.env
+.venv/
+.python-runtime/
+.browsers/
+runtime/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.idea/
+
+# Local configuration and generated files
+.env.*
+!.env.example
+.ruff_cache/
+.mypy_cache/
+*.log
