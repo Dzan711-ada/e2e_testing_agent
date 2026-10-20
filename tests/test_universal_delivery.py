@@ -15,7 +15,7 @@ from e2e_agent.core.delivery.launcher import launch
 from e2e_agent.core.delivery import recipes
 from e2e_agent.core.resources.interaction import ResourceCancelled
 from e2e_agent.core.resources.interaction import ConsoleProvider, ResourceRequest
-from e2e_agent.resources import ScriptedProvider
+from resource_provider import ScriptedProvider
 from test_universal_graph import Roles, make_plan
 from test_universal_tools import pages
 
@@ -94,15 +94,13 @@ def test_any_url_and_fixture_shortcut_use_the_same_three_agent_runner(tmp_path):
     result = {'status': 'passed', 'run_dir': str(tmp_path)}
     with patch('e2e_agent.cli.Settings.load', return_value=Settings(qwen_api_key='test-only')), \
          patch('e2e_agent.core.workflow.run', new_callable=AsyncMock, return_value=result) as runner, \
-         patch('e2e_agent.app.run_test') as legacy, redirect_stdout(io.StringIO()):
+         redirect_stdout(io.StringIO()):
         assert main(['run', '--url', 'https://example.test/anything', '--query', '检查页面标题']) == 0
         assert runner.call_args.kwargs['target_url'] == 'https://example.test/anything'
         assert runner.call_args.kwargs['goal'] == '检查页面标题'
-        legacy.assert_not_called()
         assert main(['run', '--shop', '--query', '测试注册成功']) == 0
         assert '/shop/generic_' in runner.call_args.kwargs['target_url']
         assert runner.call_count == 2
-        legacy.assert_not_called()
 
 
 def test_first_failure_and_healthy_replay_remain_inconsistent(tmp_path):

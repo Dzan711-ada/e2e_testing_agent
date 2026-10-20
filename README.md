@@ -6,7 +6,7 @@
 
 当前新任务统一进入 `e2e_agent/core/` 通用核心。网站、业务资源名称和操作顺序由 Agent 根据目标及页面决定；代码负责结构校验、工具边界、资源隔离、预算和实际验收。项目内的登录、订单、订阅和商城页面用于演示与评测。
 
-> 本文以当前源码为准。Windows PowerShell 是下文的主要运行环境；项目版本为 `0.1.0`。历史开发文档、旧运行记录与 `legacy/` 的适用范围见[文档导航](#文档导航)。
+> 本文以当前源码为准。Windows PowerShell 是下文的主要运行环境；项目版本为 `0.1.0`。目录仅保留当前运行版；旧版源码和文档通过 Git 历史查看。
 
 ## 目录
 
@@ -54,7 +54,7 @@
 - **浏览器：** Playwright 管理的 Chromium，项目默认安装在 `.browsers/`。
 - **网络：** 首次安装需要下载 Python、依赖与 Chromium；真实 Agent 任务还需要连接配置的模型服务和目标网站。
 - **控制台：** 建议使用 PowerShell / Windows Terminal，以支持资源的隐藏输入。
-- **模型密钥：** 运行真实 Agent 任务至少配置 DeepSeek 或千问之一；环境检查、本地站点服务、无模型教学示例及导出重跑不需要模型密钥。
+- **模型密钥：** 运行真实 Agent 任务至少配置 DeepSeek 或千问之一；环境检查、本地站点服务及导出重跑不需要模型密钥。
 
 主要依赖及其用途：
 
@@ -157,7 +157,6 @@ DEEPSEEK_API_KEY=填写你的密钥
 | `QWEN_MODEL` | `qwen-plus` | 千问模型标识 |
 | `REQUEST_TIMEOUT` | `60` | 单次模型请求超时，单位秒 |
 | `ACTION_TIMEOUT_MS` | `10000` | 页面导航和多数工具动作的超时，单位毫秒 |
-| `WORKER_TIMEOUT` | `45` | 保留给历史执行进程的超时配置，单位秒；通用核心不使用旧 worker 主流程 |
 | `REPLAY_TIMEOUT` | `120` | 主流程及 CLI `replay` 的独立重跑活动时间预算，单位秒 |
 | `MAX_ACTIONS` | `16` | 通用流程动作预算，必须是 `1` 到 `40` 的整数 |
 | `HEADLESS` | `true` | 是否隐藏浏览器；接受 `true/false/1/0`，`--headed` 可覆盖为显示浏览器 |
@@ -176,14 +175,14 @@ DEEPSEEK_API_KEY=填写你的密钥
 
 ## 快速开始
 
-### 不调用模型：验证教学示例
+### 不调用模型：检查环境
 
 ```powershell
 cd E:\e2e_testing_agent
-.\.venv\Scripts\python.exe main.py demo --headed
+.\.venv\Scripts\python.exe main.py check --browser
 ```
 
-`demo` 使用保留的固定注册教学流程，自动启动本地样例页面，执行并重跑测试。它适合确认浏览器与测试链路可用；它不验证通用三 Agent 的模型决策能力，也不接受自定义 `--url` 或 `--query`。
+此命令验证配置读取与 Chromium 启动。运行完整三 Agent 流程需要模型密钥；独立本地测试站使用 `serve` 启动。
 
 ### 调用模型：运行一个明确目标
 
@@ -301,10 +300,9 @@ python main.py [command] [run_dir] [options]
 | 命令 | 作用 | 需要模型 |
 | --- | --- | --- |
 | `run` | 运行通用三 Agent；默认命令 | 是 |
-| `demo` | 固定注册教学示例，使用历史实现 | 否 |
 | `check` | 读取并检查配置；可选启动浏览器 | 否 |
 | `serve` | 启动独立本地测试站 | 否 |
-| `replay <run_dir>` | 重跑已有完整导出工程；也兼容历史记录 | 否 |
+| `replay <run_dir>` | 重跑当前版本的完整导出工程 | 否 |
 | `resume <run_dir>` | 使用原记录中已确认的计划，从起点创建新任务 | 是 |
 | `diagnose <run_dir>` | 分析已保存的失败证据，在新子目录保存诊断 | 是 |
 
@@ -321,7 +319,6 @@ python main.py [command] [run_dir] [options]
 | `--port PORT` | `serve` 的监听端口，默认 `8765`，监听本机 `127.0.0.1` |
 | `--shop` | `run` 的本地商城环境快捷入口，仍使用通用三 Agent |
 | `--site practice-login` | `run` 的公开练习站网址快捷入口，不注入固定用例 |
-| `--repair` | 保留的兼容参数；通用核心按证据及副作用边界自动决定恢复，并非额外的修复开关 |
 | `-h` / `--help` | 显示命令与参数帮助 |
 
 `--url`、`--shop`、`--site` 三者互斥。`--shop` 会为本次运行启动商城并准备命名空间；运行结束后临时服务关闭，后续重跑需要让原目标地址和站点状态重新可用。想保留可持续访问的通用示例，使用单独的 `serve` 终端。
@@ -520,7 +517,7 @@ $runDir = 'runtime\替换为实际运行目录'
 
 导出代码不依赖原项目的模型 SDK 和图编排，但仍需要兼容的 Python、Playwright、Pytest、Pydantic、Chromium，以及仍可访问且状态适合重跑的目标站点。导出目录当前不附带独立依赖安装文件；在原 `.venv` 中运行最直接。独立启动器不读取主项目 `.env`，重跑活动时间预算默认 120 秒；CLI `replay` 则采用配置中的 `REPLAY_TIMEOUT`。
 
-跨机器迁移时，`manifest.json` 中的 `browsers_path` 是导出时的绝对路径，需要调整为新机器的浏览器目录并安装相应 Chromium；`headless` 和动作超时也来自清单。新核心不使用旧版固定 `E2E_RESOURCE_USERNAME/PASSWORD` 等资源变量，资源统一通过父进程代理获取。
+跨机器迁移时，`manifest.json` 中的 `browsers_path` 是导出时的绝对路径，需要调整为新机器的浏览器目录并安装相应 Chromium；`headless` 和动作超时也来自清单。资源统一通过父进程代理获取。
 
 ### `resume`：从已确认计划起点创建新运行
 
@@ -551,37 +548,36 @@ e2e_testing_agent/
 ├── .python-version            安装脚本采用的 Python 版本
 ├── .env.example               配置示例
 ├── e2e_agent/
-│   ├── cli.py                 命令分发、环境快捷入口与历史兼容
+│   ├── cli.py                 命令分发与环境快捷入口
 │   ├── config.py              配置、路径与 URL 校验
 │   ├── graph_checkpoint.py    已锁定 LangGraph 的异步桥及检查点适配
 │   ├── demo_sites.py          独立登录、订单与订阅测试站
-│   ├── core/
-│   │   ├── contracts.py       计划、资源、断言、动作协议
-│   │   ├── agents/
-│   │   │   ├── roles.py       Design、Execution、Diagnosis 角色入口
-│   │   │   ├── decisions.py   Agent 决策结构与校验
-│   │   │   ├── prompts.py     三个角色的提示词
-│   │   │   └── gateway.py     模型调用、结构化输出与调用预算
-│   │   ├── workflow/
-│   │   │   ├── state.py       可序列化的图状态
-│   │   │   ├── graph.py       16 个节点、条件边与状态推进
-│   │   │   └── runtime.py     浏览器服务、运行入口与原生暂停继续
-│   │   ├── tools/
-│   │   │   └── browser.py     DOM 观察、浏览器动作与实际断言
-│   │   ├── resources/
-│   │   │   ├── vault.py       字符串资源、复用与实值隔离
-│   │   │   └── interaction.py 控制台输入、取消、计时与脱敏
-│   │   └── delivery/
-│   │       ├── scripts.py     配方完整性与工程导出
-│   │       ├── report.py      Markdown / HTML 报告
-│   │       ├── replay.py      无模型动作配方重跑
-│   │       └── launcher.py    父进程资源代理与独立 Pytest 启动
-│   ├── legacy/                旧流程、教学 demo 与历史记录兼容
-│   └── sample_site/           原注册教学页面
-├── tests/                     核心机制、集成与历史兼容测试
-├── scripts/                   通用评测及历史阶段验证脚本
-├── docs/                      当前架构、重构约定和历史记录
-└── runtime/                   本地运行证据与开发验证产物
+│   ├── sample_shop.py         独立商城测试站
+│   └── core/
+│       ├── contracts.py       计划、资源、断言、动作协议
+│       ├── agents/
+│       │   ├── roles.py       Design、Execution、Diagnosis 角色入口
+│       │   ├── decisions.py   Agent 决策结构与校验
+│       │   ├── prompts.py     三个角色的提示词
+│       │   └── gateway.py     模型调用、结构化输出与调用预算
+│       ├── workflow/
+│       │   ├── state.py       可序列化的图状态
+│       │   ├── graph.py       16 个节点、条件边与状态推进
+│       │   └── runtime.py     浏览器服务、运行入口与原生暂停继续
+│       ├── tools/
+│       │   └── browser.py     DOM 观察、浏览器动作与实际断言
+│       ├── resources/
+│       │   ├── vault.py       字符串资源、复用与实值隔离
+│       │   └── interaction.py 控制台输入、取消、计时与脱敏
+│       └── delivery/
+│           ├── scripts.py     配方完整性与工程导出
+│           ├── report.py      Markdown / HTML 报告
+│           ├── replay.py      无模型动作配方重跑
+│           └── launcher.py    父进程资源代理与独立 Pytest 启动
+├── tests/                     当前核心机制、控制台与集成测试
+├── scripts/                   当前通用流程的真实模型评测
+├── docs/ARCHITECTURE.md        当前架构和模块边界
+└── runtime/                   本地运行证据（不纳入 Git）
 ```
 
 阅读代码可从 `main.py → cli.py → core/workflow/runtime.py` 开始，在 `workflow/graph.py` 查看完整图，再按需查看 `contracts.py`、`agents/roles.py`、`agents/prompts.py` 和 `tools/browser.py`。各子包的 `__init__.py` 只提供常用入口，具体实现位于职责对应的模块。
@@ -594,8 +590,6 @@ e2e_testing_agent/
 4. 调整 Agent 提示词：保持来源引用、全部要求的断言覆盖、资源实值隔离和不可弱化的原预期。
 5. 调整模型或依赖：验证两种结构化输出方式及 LangGraph 检查点兼容；需要更新依赖时同时维护锁文件。
 
-父包通过模块搜索路径保留原 `e2e_agent.domain`、`e2e_agent.resources` 等导入，实际实现位于 `legacy/`；新资源服务为 `e2e_agent.core.resources`。兼容代码避免再用 `e2e_agent.legacy.*` 引入第二套旧类型。新任务不继续扩展旧调度流程。
-
 ## 测试与验证
 
 ### 项目测试
@@ -604,7 +598,7 @@ e2e_testing_agent/
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-`tests/` 覆盖协议、浏览器工具、资源与脱敏、控制台输入、图中澄清/执行/恢复、完整导出、独立重跑、报告及历史兼容。其中若干测试会实际启动本地站点、Chromium 和子进程，需要先安装浏览器；这些测试使用固定决策或替身验证机制，不需要远程模型密钥。
+`tests/` 覆盖协议、浏览器工具、资源与脱敏、控制台输入、图中澄清/执行/恢复、完整导出、独立重跑、报告。其中若干测试会实际启动本地站点、Chromium 和子进程，需要先安装浏览器；这些测试使用固定决策或替身验证机制，不需要远程模型密钥。
 
 只验证当前通用核心与控制台交互时，可运行：
 
@@ -628,8 +622,6 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 | `verify_universal_run.py` | 登录、订单、订阅、公开数字输入页、故意错误预期及商城业务链，包含完整导出与独立重跑 |
 
 脚本把汇总保存为输出目录中的 `verification.json`，并保留各案例证据。真实模型评测中的业务回答和资源由测试适配器提供虚构数据，不能冒充真人交互验收；公共网站案例还依赖公网。
-
-历史 `verify_stage.py`、`verify_refactor.py`、`verify_delivery.py` 等脚本有各自阶段与基线要求，不宜当成通用快速检查。U0–U4 约定见 [UNIVERSAL_REFACTOR.md](docs/UNIVERSAL_REFACTOR.md)。历史通过次数只说明当时范围；当前运行是否成功，应查看对应证据文件。
 
 ## 常见问题
 
@@ -685,20 +677,16 @@ $env:PLAYWRIGHT_BROWSERS_PATH = Join-Path (Get-Location) '.browsers'
 
 ## 文档导航
 
-| 文档 | 用途与适用范围 |
-| --- | --- |
-| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | 当前通用核心架构、16 个节点、状态及模块边界 |
-| [UNIVERSAL_REFACTOR.md](docs/UNIVERSAL_REFACTOR.md) | 当前通用方向与 U0–U4 验证约定 |
-| [legacy/README.md](e2e_agent/legacy/README.md) | 历史兼容代码的用途与导入约定 |
-| [MIGRATION.md](docs/MIGRATION.md) | 最初从 notebook 迁移时的调整与验证，属于历史记录 |
-| [DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) / [DEVELOPMENT_PROGRESS.md](docs/DEVELOPMENT_PROGRESS.md) | 原分阶段开发计划与进度 |
-| [REFACTOR_PLAN.md](docs/REFACTOR_PLAN.md) | 旧 LangGraph 编排重构的 R 阶段记录 |
-| [AGENT_USAGE.md](docs/AGENT_USAGE.md) / [RESOURCE_USAGE.md](docs/RESOURCE_USAGE.md) | 旧商城 Agent 与资源机制说明 |
-| [DIAGNOSIS_USAGE.md](docs/DIAGNOSIS_USAGE.md) / [REPAIR_USAGE.md](docs/REPAIR_USAGE.md) | 旧版诊断和修复接口说明 |
-| [REPORT_USAGE.md](docs/REPORT_USAGE.md) | 旧版统一套件报告接口 |
-| [G7_USAGE.md](docs/G7_USAGE.md) / [DELIVERY_PLAN.md](docs/DELIVERY_PLAN.md) | 旧 G7 交付范围与门槛 |
+[ARCHITECTURE.md](docs/ARCHITECTURE.md) 说明当前通用核心架构、16 个节点、状态及模块边界。使用方法与验证命令集中在本 README。
 
-历史文档保留旧模块、固定站点协议和当时的限制描述。使用当前新任务时以本文、`ARCHITECTURE.md` 和通用核心源码为准；原 G0–G7、R0–R5 验证记录不自动构成当前通用能力的证明。
+旧实现、阶段计划及旧版使用文档已从当前目录移除，需要时通过 Git 查看：
+
+```powershell
+git log --oneline --all
+git show 2df8c41:docs/DEVELOPMENT_PLAN.md
+```
+
+`2df8c41` 是清理前的公开版本，包含旧版源码与文档。需要运行旧版时，可在单独目录建立该提交的工作树。当前 CLI 仅处理现版运行记录与导出工程。
 
 ## 来源与许可证
 

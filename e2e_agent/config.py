@@ -37,7 +37,6 @@ class Settings:
     qwen_model: str = "qwen-plus"
     request_timeout: float = 60
     action_timeout_ms: int = 10000
-    worker_timeout: float = 45
     replay_timeout: float = 120
     max_actions: int = 16
     headless: bool = True
@@ -68,12 +67,11 @@ class Settings:
             qwen_model=values.get("QWEN_MODEL") or cls.qwen_model,
             request_timeout=float(values.get("REQUEST_TIMEOUT", "60")),
             action_timeout_ms=int(values.get("ACTION_TIMEOUT_MS", "10000")),
-            worker_timeout=float(values.get("WORKER_TIMEOUT", "45")),
             replay_timeout=float(values.get("REPLAY_TIMEOUT", "120")),
             max_actions=int(values.get("MAX_ACTIONS", "16")),
             headless=flag in {"true", "1"},
         )
-        limits = [settings.request_timeout, settings.action_timeout_ms, settings.worker_timeout, settings.replay_timeout]
+        limits = [settings.request_timeout, settings.action_timeout_ms, settings.replay_timeout]
         if any(not math.isfinite(value) or value <= 0 for value in limits) or not 1 <= settings.max_actions <= 40:
             raise ValueError("超时必须为有限正数，MAX_ACTIONS 应在 1 到 40 之间。")
         os.environ.setdefault("LANGSMITH_TRACING", "false")
@@ -82,7 +80,7 @@ class Settings:
 
     def require_model(self) -> None:
         if not (self.deepseek_api_key or self.qwen_api_key):
-            raise ValueError("请在本项目 .env 配置 DEEPSEEK_API_KEY 或 QWEN_API_KEY，或先运行 demo。")
+            raise ValueError("请在本项目 .env 配置 DEEPSEEK_API_KEY 或 QWEN_API_KEY。")
 
     def redact(self, value: str) -> str:
         for secret in (self.deepseek_api_key, self.qwen_api_key):

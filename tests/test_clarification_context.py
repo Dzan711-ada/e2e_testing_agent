@@ -8,7 +8,7 @@ from e2e_agent.config import Settings
 from e2e_agent.core.agents import DesignDecision
 from e2e_agent.core.resources.interaction import ResourceUnavailable
 from e2e_agent.core.workflow import run
-from e2e_agent.resources import ScriptedProvider
+from resource_provider import ScriptedProvider
 from test_universal_graph import Roles
 from test_universal_tools import pages
 

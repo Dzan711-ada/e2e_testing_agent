@@ -24,9 +24,6 @@ dependencies = [
 [tool.setuptools.packages.find]
 include = ["e2e_agent*"]
 
-[tool.setuptools.package-data]
-e2e_agent = ["sample_site/*.html"]
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

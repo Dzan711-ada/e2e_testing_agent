@@ -13,7 +13,7 @@ from pydantic import ValidationError
 from e2e_agent.core.contracts import Action, Assertion, Plan, ResourceSpec
 from e2e_agent.core.tools.browser import BrowserTools, ToolError, allowed_url, descriptor, find_descriptor, origin
 from e2e_agent.core.resources import ResourceVault
-from e2e_agent.resources import ScriptedProvider
+from resource_provider import ScriptedProvider
 from e2e_agent.core.resources.interaction import ResourceUnavailable, ResourceCancelled
 from e2e_agent.core.resources.interaction import Redactor
 

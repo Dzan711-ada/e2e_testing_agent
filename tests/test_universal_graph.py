@@ -9,7 +9,7 @@ from e2e_agent.core.agents import ModelGateway
 from e2e_agent.core.contracts import Plan
 from e2e_agent.core.workflow import run
 from e2e_agent.core.tools.browser import BrowserTools
-from e2e_agent.resources import ScriptedProvider
+from resource_provider import ScriptedProvider
 from test_universal_tools import pages, spec
 
 
